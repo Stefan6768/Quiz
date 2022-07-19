@@ -2,7 +2,7 @@ package com.example.quiz.data
 
 import com.example.quiz.data.model.Vip
 
-class DataSource  {
+class QuizRepository  {
 
   fun loadVips(): List<Vip> {
 

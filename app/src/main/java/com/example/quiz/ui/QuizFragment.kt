@@ -5,22 +5,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.example.quiz.data.DataSource
-import com.example.quiz.data.model.Vip
 import com.example.quiz.databinding.FragmentQuizBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class QuizFragment : Fragment(){
 
   private lateinit var binding: FragmentQuizBinding
 
-  private var score = 0
-
-  private lateinit var currentVip: Vip
-
-  private val vipList = DataSource().loadVips()
-
-  private var index = 0
+  private val viewModel: QuizViewModel by viewModels()
 
   override fun onCreateView(
     inflater: LayoutInflater,
@@ -36,35 +30,55 @@ class QuizFragment : Fragment(){
 
   override fun  onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-    currentVip = vipList[index]
+    binding.scoreText.text = viewModel.score.toString()
 
-    binding.scoreText.text = score.toString()
-    binding.questionText.text = currentVip.name
+    binding.questionText.text = viewModel.currentVip.name
 
     binding.musikerButton.setOnClickListener {
-      checkAnswerUpdate(true)
+      viewModel.checkAnswer(true)
+
+      if (viewModel.finished) {
+        showEndDialog()
+      }
+
+      binding.questionText.text = viewModel.currentVip.name
+      binding.scoreText.text = viewModel.score.toString()
     }
 
     binding.sportlerButton.setOnClickListener {
-      checkAnswerUpdate(false)
+      viewModel.checkAnswer(false)
+
+      if (viewModel.finished) {
+        showEndDialog()
+      }
+
+      binding.questionText.text = viewModel.currentVip.name
+      binding.scoreText.text = viewModel.score.toString()
+
     }
   }
 
-  private fun checkAnswerUpdate(clickedAnswer: Boolean) {
-
-    if (clickedAnswer == currentVip.isMusiker) {
-      score ++
+  private  fun showEndDialog() {
+    MaterialAlertDialogBuilder(requireContext())
+      .setTitle("Gut geraten!")
+      .setMessage("Du hast ${viewModel.score} mal richtig beantwortet")
+      .setCancelable(false)
+      .setNegativeButton("verlassen") { _, _ ->
+        exitQuiz()
+      }
+      .setPositiveButton("spiele nochmal") { _, _ ->
+        restartQiuz()
+      }
+      .show()
   }
 
-  if (index < vipList.size -1) {
-    index ++
-  } else {
-    findNavController().navigate(QuizFragmentDirections.actionQuizFragmentToErgebnisFragment2(score))
+  private fun exitQuiz() {
+    activity?.finish()
   }
-    currentVip = vipList[index]
 
-    binding.questionText.text = currentVip.name
-    binding.scoreText.text = score.toString()
-
+  private fun  restartQiuz() {
+    viewModel.restartGame()
+    binding.scoreText.text = viewModel.score.toString()
+    binding.questionText.text = viewModel.currentVip.name
   }
 }
